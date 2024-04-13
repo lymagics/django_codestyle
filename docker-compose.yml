@@ -1,0 +1,16 @@
+services:
+  api:
+    build: .
+    env_file:
+      - .env
+
+  db:
+    image: postgres
+
+  redis:
+    image: redis
+
+  celery:
+    build: .
+    env_file:
+      - .env

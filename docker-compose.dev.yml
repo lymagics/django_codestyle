@@ -1,0 +1,46 @@
+services:
+  api:
+    extends:
+      file: docker-compose.yml
+      service: api
+    command: >
+      sh -c "python /app/scripts/wait_for_postgres.py &&
+             python manage.py migrate &&
+             python manage.py runsslserver --certificate /app/certs/cert.pem --key /app/certs/key.pem 0.0.0.0:8000"
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+    ports:
+      - '8000:8000'
+
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+    environment:
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - codestyle-data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    volumes:
+      - codestyle-redis:/data
+
+  celery:
+    extends:
+      file: docker-compose.yml
+      service: celery
+    command: >
+      sh -c "python /app/scripts/wait_for_django.py &&
+             celery -A config.celery.app worker -l info -P gevent"
+    volumes:
+      - ./src:/app/src
+
+volumes:
+  codestyle-data:
+  codestyle-redis:

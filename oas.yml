@@ -1,0 +1,323 @@
+openapi: 3.0.3
+
+info:
+  title: Django Codestyle API
+  description: API for demonstration purposes
+  version: 1.0.0
+
+servers:
+  - url: https://localhost:8000/api/v1
+    description: Local development server
+
+paths:
+  /users/create/:
+    post:
+      summary: Create new user
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserIn'
+      responses:
+        '201':
+          description: User successfully created
+        '400':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /users/me:
+    get:
+      summary: Retrieve authenticated user
+      operationId: getMe
+      tags:
+        - Users
+      security:
+        - tokenAuth: [] 
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      summary: retrieve user by id
+      operationId: getUserById
+      tags:
+        - Users
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /auth/login/:
+    post:
+      summary: Authenticate user
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialsIn'
+      responses:
+        '200':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /posts/create/:
+    post:
+      summary: Create new post
+      operationId: createPost
+      tags:
+        - Posts
+      security:
+        - tokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostIn'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostOut'
+        '400':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /posts/{id}/:
+    get:
+      summary: Get post by id
+      operationId: getPostById
+      tags:
+        - Posts
+      security:
+        - tokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostOut'
+        '400':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /posts/:
+    get:
+      summary: Get list of posts
+      operationId: getPosts
+      tags:
+        - Posts
+      security:
+        - tokenAuth: []
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pagination:
+                    $ref: '#/components/schemas/PaginationOut'
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PostOut'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'   
+
+components:
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableEntity:
+      description: The payload contains invalid values
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Access to the requested resource is forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Invalid authentication credentials
+      content:
+        application/json: 
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    tokenAuth:
+      type: apiKey
+      in: header
+      name: JWT
+
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 10
+
+    offsetParam:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        default: 0
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        detail:
+          oneOf:
+            - type: string
+            - type: array
+      required:
+        - detail
+
+    PaginationOut:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+          default: 10
+        offset:
+          type: integer
+          default: 0
+      required:
+        - total
+        - limit
+        - offset
+
+    UserIn:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - username
+        - password
+
+    UserOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        avatar_url:
+          type: string
+          format: url
+      required:
+        - id
+        - username
+        - avatar_url
+
+    CredentialsIn:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    PostIn:
+      type: object
+      properties:
+        text:
+          type: string
+      required:
+        - text
+
+    PostOut:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        author:
+          $ref: '#/components/schemas/UserOut'
+      required:
+        - id
+        - text
+        - created_at
+        - author
