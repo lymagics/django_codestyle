@@ -8,9 +8,9 @@ from services.jwt import JwtService
 def test_encode_method():
     # given
     payload = {'user_id': 123}
-    jwt_service = JwtService()
 
     # when
+    jwt_service = JwtService()
     actual_encoded_data = jwt_service.encode(payload=payload)
 
     # then
