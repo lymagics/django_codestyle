@@ -17,7 +17,7 @@ def test_user_create_successful(mocker: MockerFixture, fake: Faker, api_client: 
         'email': fake.email(),
         'password': 'testpass123',
     }
-    mock_send_greetings_email = mocker.patch('views.user.MailService.send_greetings_email')
+    mock_send_greetings_email = mocker.patch('views.v1.user.MailService.send_greetings_email')
 
     # when
     url = reverse('users_create')
